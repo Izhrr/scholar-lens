@@ -24,7 +24,7 @@ def get_ingestion_service(request: Request) -> IngestionService:
 
 def get_chat_service(request: Request, db: DbSession, settings: AppSettings) -> ChatService:
     state = request.app.state
-    return ChatService(db, settings, state.retriever, state.openai)
+    return ChatService(db, settings, state.retriever, state.llm)
 
 
 PaperServiceDep = Annotated[PaperService, Depends(get_paper_service)]

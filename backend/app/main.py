@@ -12,8 +12,9 @@ from app.core.config import get_settings
 from app.core.errors import AppError, app_error_handler
 from app.core.logging import configure_logging
 from app.db.session import SessionLocal
-from app.generation.openai_client import OpenAIGateway
+from app.generation.llm import LLMClient
 from app.retrieval.bm25 import BM25Index
+from app.retrieval.embeddings import build_embedder
 from app.retrieval.retriever import HybridRetriever
 from app.retrieval.vector_store import VectorStore
 from app.services.ingestion_service import IngestionService
@@ -34,10 +35,11 @@ def _wait_for_vector_store(store: VectorStore, attempts: int = 15, delay: float 
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     settings.papers_dir.mkdir(parents=True, exist_ok=True)
-    if not settings.openai_api_key.get_secret_value():
-        logger.warning("OPENAI_API_KEY is empty: uploads will fail to index and chat will fail")
+    if not settings.llm_api_key.get_secret_value():
+        logger.warning("LLM_API_KEY is empty: chat answers will fail")
 
-    openai_gateway = OpenAIGateway(settings)
+    llm = LLMClient(settings)
+    embedder = build_embedder(settings)
     vector_store = VectorStore(settings)
     bm25 = BM25Index()
     await asyncio.to_thread(_wait_for_vector_store, vector_store)
@@ -46,12 +48,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         reconcile_interrupted_jobs(db)
         bm25.rebuild(db)
 
-    app.state.openai = openai_gateway
+    app.state.llm = llm
     app.state.vector_store = vector_store
     app.state.bm25 = bm25
-    app.state.retriever = HybridRetriever(settings, bm25, vector_store, openai_gateway)
+    app.state.retriever = HybridRetriever(settings, bm25, vector_store, embedder)
     app.state.ingestion_service = IngestionService(
-        SessionLocal, settings, openai_gateway, vector_store, bm25
+        SessionLocal, settings, embedder, vector_store, bm25
     )
     yield
 

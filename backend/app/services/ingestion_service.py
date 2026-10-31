@@ -8,10 +8,10 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import Settings
 from app.core.errors import AppError
 from app.db.models import IngestionJob, JobStatus, Paper, PaperChunk, PaperStatus
-from app.generation.openai_client import OpenAIGateway
 from app.ingestion.chunking import chunk_pages
 from app.ingestion.parsing import parse_pdf
 from app.retrieval.bm25 import BM25Index
+from app.retrieval.embeddings import Embedder
 from app.retrieval.vector_store import ChunkVector, VectorStore
 
 logger = logging.getLogger(__name__)
@@ -36,13 +36,13 @@ class IngestionService:
         self,
         session_factory: sessionmaker[Session],
         settings: Settings,
-        openai_gateway: OpenAIGateway,
+        embedder: Embedder,
         vector_store: VectorStore,
         bm25: BM25Index,
     ) -> None:
         self._session_factory = session_factory
         self._settings = settings
-        self._openai = openai_gateway
+        self._embedder = embedder
         self._vectors = vector_store
         self._bm25 = bm25
 
@@ -100,7 +100,7 @@ class IngestionService:
         db.add_all(rows)
         db.flush()
 
-        embeddings = self._openai.embed_documents([row.content for row in rows])
+        embeddings = self._embedder.embed_documents([row.content for row in rows])
         self._vectors.upsert(
             [
                 ChunkVector(
@@ -113,7 +113,7 @@ class IngestionService:
                 )
                 for row, embedding in zip(rows, embeddings, strict=True)
             ],
-            embedding_model=self._openai.embedding_model,
+            embedding_model=self._embedder.model_name,
         )
 
         stored = self._vectors.count_for_paper(paper.id)
@@ -125,7 +125,7 @@ class IngestionService:
         paper.chunk_count = len(rows)
         paper.status = PaperStatus.INDEXED
         paper.error_message = None
-        paper.embedding_model = self._openai.embedding_model
+        paper.embedding_model = self._embedder.model_name
         paper.chunking_version = s.chunking_version
 
     def _fail(self, db: Session, job_id: uuid.UUID, paper_id: uuid.UUID, exc: Exception) -> None:

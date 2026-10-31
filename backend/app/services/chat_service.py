@@ -15,7 +15,7 @@ from app.db.models import (
     PaperStatus,
 )
 from app.generation.citations import resolve_citations
-from app.generation.openai_client import OpenAIGateway
+from app.generation.llm import LLMClient
 from app.generation.prompts import ABSTAIN_MESSAGE, build_messages
 from app.retrieval.retriever import HybridRetriever
 from app.schemas.chats import AskResponse, MessageOut, RetrievalStats, SourceOut
@@ -30,12 +30,12 @@ class ChatService:
         db: Session,
         settings: Settings,
         retriever: HybridRetriever,
-        openai_gateway: OpenAIGateway,
+        llm: LLMClient,
     ) -> None:
         self._db = db
         self._settings = settings
         self._retriever = retriever
-        self._openai = openai_gateway
+        self._llm = llm
 
     def create_session(self) -> ChatSession:
         session = ChatSession(title=DEFAULT_TITLE)
@@ -72,7 +72,7 @@ class ChatService:
         grounded = False
         # No evidence means no LLM call: nothing to ground an answer in, and no cost.
         if chunks:
-            completion = self._openai.complete(build_messages(question, chunks, history))
+            completion = self._llm.complete(build_messages(question, chunks, history))
             model = completion.model
             cited = resolve_citations(completion.text, len(chunks))
             if not cited.abstained:

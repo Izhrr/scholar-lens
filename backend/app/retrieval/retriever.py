@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.db.models import Paper, PaperChunk, PaperStatus
-from app.generation.openai_client import OpenAIGateway
 from app.retrieval.bm25 import BM25Index
+from app.retrieval.embeddings import Embedder
 from app.retrieval.fusion import reciprocal_rank_fusion
 from app.retrieval.vector_store import VectorStore
 
@@ -35,19 +35,19 @@ class HybridRetriever:
         settings: Settings,
         bm25: BM25Index,
         vector_store: VectorStore,
-        openai_gateway: OpenAIGateway,
+        embedder: Embedder,
     ) -> None:
         self._settings = settings
         self._bm25 = bm25
         self._vectors = vector_store
-        self._openai = openai_gateway
+        self._embedder = embedder
 
     def retrieve(
         self, db: Session, query: str, paper_ids: list[uuid.UUID] | None
     ) -> RetrievalResult:
         s = self._settings
         sparse = self._bm25.search(query, s.bm25_top_k, paper_ids)
-        dense = self._vectors.query(self._openai.embed_query(query), s.dense_top_k, paper_ids)
+        dense = self._vectors.query(self._embedder.embed_query(query), s.dense_top_k, paper_ids)
         fused = reciprocal_rank_fusion([sparse, dense], k=s.rrf_k)
 
         rows = self._load_indexed_chunks(db, [chunk_id for chunk_id, _ in fused])

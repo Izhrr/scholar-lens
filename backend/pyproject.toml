@@ -7,6 +7,7 @@ dependencies = [
     "alembic>=1.20",
     "chromadb-client==1.5.9",
     "fastapi[standard]>=0.162",
+    "fastembed>=0.9.1",
     "langchain-text-splitters>=1.1",
     "openai>=3.42",
     "psycopg[binary]>=3.3",
