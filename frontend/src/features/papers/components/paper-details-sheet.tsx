@@ -65,7 +65,7 @@ function PaperDetails({ paper, onDelete }: { paper: Paper; onDelete: (paper: Pap
       <SheetHeader className="border-b px-6 pt-6 pb-5">
         <PaperStatusBadge status={paper.status} />
         <SheetTitle className="mt-2 pr-6 font-serif text-xl leading-snug">{paper.title}</SheetTitle>
-        <SheetDescription>Stored on this machine. Only extracted passages go to OpenAI.</SheetDescription>
+        <SheetDescription>The PDF file stays on this machine.</SheetDescription>
       </SheetHeader>
 
       <div className="flex-1 overflow-y-auto px-6 py-5">

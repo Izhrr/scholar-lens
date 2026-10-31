@@ -77,7 +77,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <ThemeToggle />
         <p className="text-xs leading-relaxed text-muted-foreground">
           Local workspace. PDFs stay on this machine; questions and matching passages are sent to
-          OpenAI.
+          your chat model provider.
         </p>
       </div>
     </div>
