@@ -24,3 +24,7 @@ next-env.d.ts
 .DS_Store
 .idea/
 .vscode/
+
+# Private planning docs and design mockups (kept locally, not published)
+plan/
+reference/
