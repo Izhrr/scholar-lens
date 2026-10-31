@@ -39,8 +39,11 @@ services:
       CHROMA_HOST: chroma
       CHROMA_PORT: "8000"
       PAPERS_DIR: /app/data/papers
+      EMBEDDING_CACHE_DIR: /app/models
     volumes:
       - ./data/papers:/app/data/papers
+      # Local embedding model files (EMBEDDING_PROVIDER=local), downloaded once.
+      - embedding_models:/app/models
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,3 +74,4 @@ services:
 volumes:
   postgres_data:
   chroma_data:
+  embedding_models:

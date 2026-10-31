@@ -21,8 +21,8 @@ COPY app ./app
 
 # UID 1000 matches the usual Linux desktop user, so the bind-mounted PDF folder stays writable.
 RUN useradd --uid 1000 --create-home scholarlens \
-    && mkdir -p /app/data/papers \
-    && chown -R scholarlens /app/data
+    && mkdir -p /app/data/papers /app/models \
+    && chown -R scholarlens /app/data /app/models
 USER scholarlens
 
 EXPOSE 8000
