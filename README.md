@@ -15,8 +15,6 @@ ScholarLens is a single-user app that runs on your own machine with Docker Compo
 
 PDFs, metadata, vectors, and chat history stay on your machine. The only external calls go to the model provider you configure (OpenAI by default, or any OpenAI-compatible API such as DeepSeek or Gemini): the question plus the top matching passages at chat time, and chunk text at upload when embeddings come from an API. With local embeddings, uploads never leave the machine.
 
-The full requirements and system design live in [`plan/PRD.md`](plan/PRD.md) and [`plan/design.md`](plan/design.md).
-
 ## Architecture
 
 ```mermaid
@@ -241,7 +239,6 @@ scholar-lens/
 │       └── lib/            # API client, env, formatting
 ├── data/papers/            # uploaded PDFs (git-ignored)
 ├── img/                    # README screenshots
-├── plan/                   # PRD and system design
 ├── docker-compose.yml
 ├── docker-compose.dev.yml
 └── .env.example
